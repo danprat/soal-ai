@@ -112,9 +112,10 @@ async function tryApiKeyWithDoubleCheck(imageData) {
     throw new Error('No API keys available');
   }
   
-  // For better accuracy, try with 2 different API keys if available
-  if (apiKeys.length >= 2) {
-    console.log('🎯 Using double-check mode for better accuracy...');
+  // Only use double-check if we have 3+ API keys (to ensure enough for fallback)
+  // Otherwise prioritize speed over redundancy
+  if (apiKeys.length >= 3) {
+    console.log('🎯 Using double-check mode for maximum accuracy...');
     
     try {
       // First attempt
@@ -123,23 +124,25 @@ async function tryApiKeyWithDoubleCheck(imageData) {
       // Second attempt with different key
       const result2 = await tryApiKeyWithFallback(imageData, 1);
       
-      // Compare results
-      if (result1.trim() === result2.trim()) {
-        console.log('✅ Double-check: Both answers match!');
-        return result1;
+      // Compare results - but don't be too strict about exact matches
+      const simplified1 = result1.trim().toLowerCase();
+      const simplified2 = result2.trim().toLowerCase();
+      
+      if (simplified1 === simplified2 || simplified1.includes(simplified2) || simplified2.includes(simplified1)) {
+        console.log('✅ Double-check: Results are consistent');
+        return result1; // Return first result (usually more complete)
       } else {
-        console.log('⚠️ Double-check: Answers differ, using first result');
-        console.log('Result 1:', result1.substring(0, 50));
-        console.log('Result 2:', result2.substring(0, 50));
+        console.log('⚠️ Double-check: Minor differences, using first result');
         return result1; // Use first result as primary
       }
     } catch (error) {
-      console.log('❌ Double-check failed, falling back to single attempt');
-      return await tryApiKeyWithFallback(imageData, 3);
+      console.log('❌ Double-check failed, using single attempt for speed');
+      return await tryApiKeyWithFallback(imageData, 2);
     }
   } else {
-    // Only one API key available, use normal fallback
-    return await tryApiKeyWithFallback(imageData, 3);
+    // Use single attempt for faster response
+    console.log('⚡ Using single attempt mode for faster response');
+    return await tryApiKeyWithFallback(imageData, 2);
   }
 }
 
@@ -149,38 +152,27 @@ async function makeGeminiRequest(base64ImageData, apiKey) {
       {
         parts: [
           { 
-            text: `Anda adalah AI ahli dalam memecahkan soal akademik Indonesia dengan tingkat akurasi tinggi. Analisis gambar soal dengan SANGAT TELITI.
+            text: `Anda AI ahli akademik Indonesia. Analisis soal di gambar dan berikan jawaban SINGKAT tapi AKURAT.
 
-PROTOKOL ANALISIS:
-1. BACA dan PAHAMI seluruh soal dengan detail
-2. IDENTIFIKASI mata pelajaran dan jenis soal
-3. APLIKASIKAN pengetahuan kurikulum Indonesia yang tepat
-4. HITUNG/ANALISIS dengan metode yang benar
-5. VERIFIKASI jawaban sebelum memberikan respon
+INSTRUKSI:
+1. Baca soal dengan teliti
+2. Berikan jawaban yang PASTI BENAR
+3. Format jawaban harus RINGKAS dan LANGSUNG
 
-MATA PELAJARAN SPESIFIK:
-📚 BAHASA INDONESIA: Fokus pada EYD, tata bahasa, sastra Indonesia, dan konteks budaya
-🔢 MATEMATIKA: Gunakan rumus yang tepat, perhatikan satuan, periksa perhitungan 2x
-🧪 IPA (Fisika/Kimia/Biologi): Aplikasikan hukum sains, rumus, dan konsep yang akurat
-🌍 IPS: Konteks Indonesia (sejarah, geografi, ekonomi, sosiologi)
-☪️ AGAMA ISLAM: Sesuai Al-Quran, Hadits, dan ajaran Islam yang shahih
-🎨 SENI/BUDAYA: Budaya dan seni tradisional Indonesia
-💻 TIK/KOMPUTER: Teknologi informasi dan komunikasi
+FORMAT JAWABAN:
+• Pilihan Ganda: "A. [jawaban]"
+• Matematika: "[angka] [satuan]"
+• Isian: "[jawaban singkat]"
+• True/False: "Benar" atau "Salah"
+• Essay: "[1 kalimat jawaban]"
 
-FORMAT JAWABAN WAJIB:
-• Pilihan Ganda: "A. [jawaban lengkap dengan alasan singkat]"
-• Matematika: "[angka hasil] [satuan] (metode: [rumus/cara])"
-• Isian Singkat: "[jawaban tepat]"
-• Benar/Salah: "BENAR/SALAH - [alasan singkat]"
-• Essay: "[jawaban komprehensif 1-3 kalimat]"
+PENTING:
+- JANGAN beri penjelasan panjang
+- JANGAN tulis rumus atau langkah
+- FOKUS pada jawaban yang tepat dan singkat
+- Gunakan pengetahuan kurikulum Indonesia
 
-QUALITY CONTROL:
-❌ JANGAN jawab jika soal tidak jelas/terpotong
-❌ JANGAN tebak-tebakan, pastikan logika benar
-✅ SELALU cek ulang logika dan perhitungan
-✅ GUNAKAN pengetahuan akademik Indonesia yang tepat
-
-INSTRUKSI AKHIR: Berikan jawaban yang PASTI BENAR dan DAPAT DIPERTANGGUNGJAWABKAN:` 
+Berikan jawaban FINAL:` 
           },
           {
             inline_data: {
@@ -192,11 +184,11 @@ INSTRUKSI AKHIR: Berikan jawaban yang PASTI BENAR dan DAPAT DIPERTANGGUNGJAWABKA
       }
     ],
     generationConfig: {
-      temperature: 0.05,  // Sangat rendah untuk konsistensi maksimal
-      topK: 3,           // Fokus pada jawaban terbaik saja
-      topP: 0.7,         // Balanced creativity
-      maxOutputTokens: 600,  // Cukup ruang untuk penjelasan lengkap
-      candidateCount: 1  // Single best candidate
+      temperature: 0.05,
+      topK: 2,
+      topP: 0.6,
+      maxOutputTokens: 150,  // Drastis dikurangi untuk jawaban singkat
+      candidateCount: 1
     }
   };
 
@@ -592,12 +584,12 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 console.log("Background script loaded with multi-API key round-robin support.");
 
 async function validateAndImproveAnswer(rawAnswer, imageData) {
-  // Basic answer validation
+  // Basic answer cleaning - keep it simple
   const cleanAnswer = rawAnswer.replace(/^(Jawaban|Answer|Penjelasan):\s*/i, '')
                                .replace(/\n\n+/g, '\n')
                                .trim();
   
-  // Check if answer seems incomplete or unclear
+  // Check if answer seems incomplete - but don't add verbose warnings
   const suspiciousPatterns = [
     /tidak dapat/i,
     /tidak jelas/i,
@@ -611,21 +603,21 @@ async function validateAndImproveAnswer(rawAnswer, imageData) {
   const hasIssues = suspiciousPatterns.some(pattern => pattern.test(cleanAnswer));
   
   if (hasIssues) {
-    console.log('⚠️ Answer seems uncertain, marking for user attention');
-    return `${cleanAnswer}\n\n⚠️ Catatan: Jika kurang jelas, coba screenshot dengan kualitas lebih baik atau pilih area soal yang lebih spesifik.`;
+    return "Soal tidak jelas, coba screenshot lebih baik";
   }
   
-  // Enhanced formatting for different answer types
+  // Keep formatting simple and direct
   if (cleanAnswer.match(/^[A-E]\./)) {
-    // Multiple choice - ensure proper formatting
+    // Multiple choice - already good format
     return cleanAnswer;
   } else if (cleanAnswer.match(/^\d+(\.\d+)?/)) {
-    // Numeric answer - validate format
+    // Numeric answer - keep as is
     return cleanAnswer;
   } else if (cleanAnswer.match(/^(benar|salah|true|false)/i)) {
-    // True/false - standardize format
+    // True/false - standardize but keep short
     return cleanAnswer.charAt(0).toUpperCase() + cleanAnswer.slice(1).toLowerCase();
   }
   
+  // For other answers, just return clean version without additions
   return cleanAnswer;
 }
