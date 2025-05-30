@@ -1,0 +1,367 @@
+/* Floating Scan Menu */
+.soal-floating-menu {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  z-index: 2147483647 !important;
+  background: linear-gradient(135deg, #007bff, #0056b3) !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0, 123, 255, 0.3) !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  user-select: none !important;
+  transition: all 0.3s ease !important;
+  backdrop-filter: blur(10px) !important;
+}
+
+.soal-floating-menu.minimized {
+  width: 50px !important;
+  height: 50px !important;
+  border-radius: 50% !important;
+  cursor: pointer !important;
+}
+
+.soal-floating-menu.expanded {
+  min-width: 200px !important;
+  padding: 15px !important;
+}
+
+.soal-floating-menu:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 6px 25px rgba(0, 123, 255, 0.4) !important;
+}
+
+.soal-menu-toggle {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 100% !important;
+  height: 100% !important;
+  color: white !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+}
+
+.soal-menu-content {
+  display: none !important;
+}
+
+.soal-floating-menu.expanded .soal-menu-content {
+  display: block !important;
+}
+
+.soal-floating-menu.expanded .soal-menu-toggle {
+  display: none !important;
+}
+
+.soal-menu-header {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 15px !important;
+  color: white !important;
+}
+
+.soal-menu-title {
+  font-size: 16px !important;
+  font-weight: 600 !important;
+  margin: 0 !important;
+}
+
+.soal-menu-close {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  font-size: 20px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: 24px !important;
+  height: 24px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.2s !important;
+}
+
+.soal-menu-close:hover {
+  background: rgba(255, 255, 255, 0.2) !important;
+}
+
+.soal-menu-buttons {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 8px !important;
+}
+
+.soal-menu-status {
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+  margin-bottom: 15px !important;
+  padding: 8px 12px !important;
+  background: rgba(255, 255, 255, 0.1) !important;
+  border-radius: 6px !important;
+  font-size: 12px !important;
+  color: white !important;
+}
+
+.soal-status-indicator {
+  font-size: 14px !important;
+  line-height: 1 !important;
+}
+
+#soal-status-text {
+  font-weight: 500 !important;
+  flex: 1 !important;
+}
+
+.soal-menu-btn {
+  background: rgba(255, 255, 255, 0.2) !important;
+  border: none !important;
+  color: white !important;
+  padding: 8px 12px !important;
+  border-radius: 6px !important;
+  font-size: 13px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-weight: 500 !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 8px !important;
+}
+
+.soal-menu-btn:hover {
+  background: rgba(255, 255, 255, 0.3) !important;
+  transform: translateY(-1px) !important;
+}
+
+.soal-menu-btn:active {
+  transform: translateY(0) !important;
+}
+
+.soal-menu-shortcut {
+  font-size: 10px !important;
+  opacity: 0.8 !important;
+  margin-left: auto !important;
+  font-family: monospace !important;
+}
+
+/* Draggable */
+.soal-floating-menu.dragging {
+  transition: none !important;
+}
+
+.soal-floating-menu.minimized .soal-menu-toggle {
+  display: flex !important;
+}
+
+/* Snipping Overlay */
+.soal-scanner-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.3) !important;
+  z-index: 999999 !important;
+  cursor: crosshair !important;
+  user-select: none !important;
+}
+
+.soal-scanner-selection {
+  position: absolute !important;
+  border: 2px dashed #007bff !important;
+  background: rgba(0, 123, 255, 0.1) !important;
+  pointer-events: none !important;
+}
+
+.soal-scanner-instructions {
+  position: fixed !important;
+  top: 20px !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  background: #007bff !important;
+  color: white !important;
+  padding: 10px 20px !important;
+  border-radius: 20px !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 14px !important;
+  z-index: 1000000 !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+}
+
+.soal-scanner-cancel-btn {
+  position: fixed !important;
+  top: 20px !important;
+  right: 20px !important;
+  background: #dc3545 !important;
+  color: white !important;
+  border: none !important;
+  padding: 10px 15px !important;
+  border-radius: 5px !important;
+  cursor: pointer !important;
+  font-family: Arial, sans-serif !important;
+  font-size: 12px !important;
+  z-index: 1000000 !important;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.3) !important;
+}
+
+.soal-scanner-cancel-btn:hover {
+  background: #c82333 !important;
+}
+
+/* Answer Overlay */
+.soal-answer-overlay {
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  background: white !important;
+  border-radius: 12px !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+  z-index: 1000001 !important;
+  max-width: 500px !important;
+  max-height: 70vh !important;
+  overflow-y: auto !important;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif !important;
+  animation: fadeInScale 0.3s ease-out !important;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.9);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+.soal-answer-header {
+  background: linear-gradient(135deg, #28a745, #20c997) !important;
+  color: white !important;
+  padding: 15px 20px !important;
+  border-radius: 12px 12px 0 0 !important;
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+}
+
+.soal-answer-header h3 {
+  margin: 0 !important;
+  font-size: 18px !important;
+  font-weight: 600 !important;
+}
+
+.soal-answer-close {
+  background: none !important;
+  border: none !important;
+  color: white !important;
+  font-size: 24px !important;
+  cursor: pointer !important;
+  padding: 0 !important;
+  width: 30px !important;
+  height: 30px !important;
+  border-radius: 50% !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background 0.2s !important;
+}
+
+.soal-answer-close:hover {
+  background: rgba(255,255,255,0.2) !important;
+}
+
+.soal-answer-content {
+  padding: 20px !important;
+  line-height: 1.6 !important;
+  color: #333 !important;
+}
+
+.soal-answer-text {
+  font-size: 16px !important;
+  margin-bottom: 15px !important;
+  white-space: pre-wrap !important;
+  word-wrap: break-word !important;
+}
+
+.soal-answer-actions {
+  display: flex !important;
+  gap: 10px !important;
+  padding-top: 15px !important;
+  border-top: 1px solid #eee !important;
+}
+
+.soal-answer-btn {
+  padding: 8px 16px !important;
+  border: none !important;
+  border-radius: 6px !important;
+  font-size: 14px !important;
+  cursor: pointer !important;
+  transition: all 0.2s !important;
+  font-weight: 500 !important;
+}
+
+.soal-answer-btn-primary {
+  background: #007bff !important;
+  color: white !important;
+}
+
+.soal-answer-btn-primary:hover {
+  background: #0056b3 !important;
+}
+
+.soal-answer-btn-secondary {
+  background: #6c757d !important;
+  color: white !important;
+}
+
+.soal-answer-btn-secondary:hover {
+  background: #545b62 !important;
+}
+
+/* Loading overlay */
+.soal-loading-overlay {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  background: rgba(0, 0, 0, 0.5) !important;
+  z-index: 1000000 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-family: Arial, sans-serif !important;
+}
+
+.soal-loading-content {
+  background: white !important;
+  padding: 30px !important;
+  border-radius: 12px !important;
+  text-align: center !important;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.3) !important;
+}
+
+.soal-loading-spinner {
+  width: 40px !important;
+  height: 40px !important;
+  border: 4px solid #f3f3f3 !important;
+  border-top: 4px solid #007bff !important;
+  border-radius: 50% !important;
+  animation: spin 1s linear infinite !important;
+  margin: 0 auto 15px !important;
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.soal-loading-text {
+  color: #333 !important;
+  font-size: 16px !important;
+  margin: 0 !important;
+} 

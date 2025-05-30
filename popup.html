@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Soal Scanner AI</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 220px;
+      padding: 15px;
+      text-align: center;
+      background: #f8f9fa;
+    }
+    h3 {
+      margin: 0 0 15px 0;
+      color: #333;
+      font-size: 16px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      margin: 5px 0;
+      background-color: #4CAF50;
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 14px;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #45a049;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #snippingButton {
+      background-color: #ff6b35;
+      margin-bottom: 10px;
+    }
+    #snippingButton:hover {
+      background-color: #e55a2b;
+    }
+    #settingsButton {
+      background-color: #007bff;
+      padding: 8px;
+      font-size: 12px;
+    }
+    #settingsButton:hover {
+      background-color: #0056b3;
+    }
+    #status {
+      margin-top: 15px;
+      padding: 10px;
+      border-radius: 5px;
+      font-size: 12px;
+      min-height: 20px;
+      text-align: left;
+    }
+    .divider {
+      margin: 10px 0;
+      border-top: 1px solid #ddd;
+    }
+    .error {
+      color: #dc3545;
+    }
+    .success {
+      color: #28a745;
+    }
+    .info-text {
+      font-size: 11px;
+      color: #6c757d;
+      margin: 8px 0;
+      text-align: center;
+      line-height: 1.3;
+    }
+    .highlight {
+      color: #007bff;
+      font-weight: 600;
+    }
+    .shortcut-hint {
+      font-size: 10px;
+      color: #6c757d;
+      margin-top: 3px;
+      font-style: italic;
+    }
+    .shortcut-key {
+      background: #333;
+      color: white;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 9px;
+    }
+  </style>
+</head>
+<body>
+  <h3>Soal Scanner AI</h3>
+  
+  <button id="snippingButton">
+    📐 Pilih Area Soal
+    <div class="shortcut-hint">Shortcut: <span class="shortcut-key">Ctrl+Shift+A</span></div>
+  </button>
+  
+  <button id="scanButton">
+    📸 Scan Seluruh Halaman
+    <div class="shortcut-hint">Shortcut: <span class="shortcut-key">Ctrl+Shift+S</span></div>
+  </button>
+  
+  <div class="info-text">
+    💡 <span class="highlight">Jawaban akan muncul overlay di halaman web</span> untuk pengalaman yang lebih baik
+  </div>
+  
+  <div class="divider"></div>
+  
+  <button id="settingsButton">⚙️ Settings API Key</button>
+  
+  <div id="status"></div>
+  
+  <script src="popup.js"></script>
+</body>
+</html>

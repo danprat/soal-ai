@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Soal Scanner AI - Settings</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      padding: 30px;
+      max-width: 500px;
+      margin: 0 auto;
+      background: #f8f9fa;
+      line-height: 1.6;
+    }
+    .container {
+      background: white;
+      padding: 30px;
+      border-radius: 12px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+    }
+    h1 {
+      color: #333;
+      margin-bottom: 20px;
+      font-size: 24px;
+      text-align: center;
+    }
+    .section {
+      margin-bottom: 30px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid #eee;
+    }
+    .section:last-child {
+      border-bottom: none;
+      margin-bottom: 0;
+    }
+    .section h2 {
+      color: #333;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+    .description {
+      background: #e7f3ff;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      border-left: 4px solid #007bff;
+    }
+    .description p {
+      margin: 0;
+      color: #0056b3;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: 600;
+      color: #333;
+    }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      margin-bottom: 20px;
+      box-sizing: border-box;
+      border: 2px solid #ddd;
+      border-radius: 8px;
+      font-size: 16px;
+      transition: border-color 0.3s;
+    }
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #007bff;
+    }
+    input[type="text"]:valid {
+      border-color: #28a745;
+    }
+    
+    /* Toggle Switch */
+    .toggle-container {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 15px;
+      padding: 12px 0;
+    }
+    .toggle-label {
+      flex: 1;
+      margin: 0;
+      font-weight: 500;
+    }
+    .toggle-description {
+      font-size: 13px;
+      color: #666;
+      margin-top: 5px;
+    }
+    
+    .toggle-switch {
+      position: relative;
+      width: 60px;
+      height: 30px;
+      margin-left: 15px;
+    }
+    
+    .toggle-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #ccc;
+      transition: .4s;
+      border-radius: 30px;
+    }
+    
+    .toggle-slider:before {
+      position: absolute;
+      content: "";
+      height: 22px;
+      width: 22px;
+      left: 4px;
+      bottom: 4px;
+      background-color: white;
+      transition: .4s;
+      border-radius: 50%;
+    }
+    
+    input:checked + .toggle-slider {
+      background-color: #007bff;
+    }
+    
+    input:checked + .toggle-slider:before {
+      transform: translateX(30px);
+    }
+    
+    /* Shortcut Info */
+    .shortcut-info {
+      background: #f8f9fa;
+      padding: 15px;
+      border-radius: 8px;
+      margin-top: 15px;
+    }
+    
+    .shortcut-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    
+    .shortcut-item:last-child {
+      margin-bottom: 0;
+    }
+    
+    .shortcut-key {
+      background: #333;
+      color: white;
+      padding: 2px 4px;
+      border-radius: 3px;
+      font-family: monospace;
+      font-size: 9px;
+    }
+
+    /* Multi API Key Styles */
+    .api-key-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+      padding: 12px;
+      background: #f8f9fa;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      transition: all 0.3s;
+    }
+
+    .api-key-item.valid {
+      border-color: #28a745;
+      background: #d4edda;
+    }
+
+    .api-key-item.invalid {
+      border-color: #dc3545;
+      background: #f8d7da;
+    }
+
+    .api-key-item.testing {
+      border-color: #007bff;
+      background: #cce7ff;
+    }
+
+    .api-key-input {
+      flex: 1;
+      padding: 8px 12px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: monospace;
+    }
+
+    .api-key-status {
+      font-size: 12px;
+      font-weight: 600;
+      padding: 4px 8px;
+      border-radius: 4px;
+      min-width: 60px;
+      text-align: center;
+    }
+
+    .api-key-status.valid {
+      background: #28a745;
+      color: white;
+    }
+
+    .api-key-status.invalid {
+      background: #dc3545;
+      color: white;
+    }
+
+    .api-key-status.testing {
+      background: #007bff;
+      color: white;
+    }
+
+    .api-key-status.unknown {
+      background: #6c757d;
+      color: white;
+    }
+
+    .api-key-actions {
+      display: flex;
+      gap: 5px;
+    }
+
+    .api-key-btn {
+      padding: 6px 10px;
+      font-size: 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .api-key-btn.test {
+      background: #17a2b8;
+      color: white;
+    }
+
+    .api-key-btn.test:hover {
+      background: #138496;
+    }
+
+    .api-key-btn.remove {
+      background: #dc3545;
+      color: white;
+    }
+
+    .api-key-btn.remove:hover {
+      background: #c82333;
+    }
+
+    .round-robin-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      margin-right: 5px;
+    }
+
+    .round-robin-indicator.active {
+      background: #28a745;
+      animation: pulse 2s infinite;
+    }
+
+    .round-robin-indicator.inactive {
+      background: #6c757d;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    button {
+      width: 100%;
+      padding: 12px 20px;
+      background: linear-gradient(135deg, #007bff, #0056b3);
+      color: white;
+      border: none;
+      cursor: pointer;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      transition: all 0.3s;
+    }
+    button:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,123,255,0.3);
+    }
+    button:disabled {
+      background: #6c757d;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    #status {
+      margin-top: 20px;
+      padding: 12px;
+      border-radius: 8px;
+      font-weight: 500;
+      text-align: center;
+      min-height: 20px;
+      transition: all 0.3s;
+    }
+    .help-links {
+      margin-top: 30px;
+      text-align: center;
+      padding-top: 20px;
+      border-top: 1px solid #eee;
+    }
+    .help-links a {
+      color: #007bff;
+      text-decoration: none;
+      margin: 0 10px;
+      font-size: 14px;
+    }
+    .help-links a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Soal Scanner AI Settings</h1>
+    
+    <!-- API Key Section -->
+    <div class="section">
+      <h2>🔑 Multi API Key Configuration</h2>
+      <div class="description">
+        <p>
+          <strong>Multi API Key untuk Load Balancing:</strong><br>
+          1. Tambahkan beberapa API Key Gemini untuk backup dan load balancing<br>
+          2. Sistem akan otomatis round-robin antar keys<br>
+          3. Jika satu key error, otomatis switch ke key berikutnya<br>
+          4. Minimum 1 key, maksimal 5 keys
+        </p>
+      </div>
+
+      <div id="apiKeysContainer">
+        <!-- API Keys akan di-generate di sini -->
+      </div>
+
+      <div style="display: flex; gap: 10px; margin: 15px 0;">
+        <button id="addApiKeyButton" style="background: linear-gradient(135deg, #28a745, #20c997); flex: 1;">
+          ➕ Tambah API Key
+        </button>
+        <button id="saveApiKeysButton" style="background: linear-gradient(135deg, #007bff, #0056b3); flex: 1;">
+          💾 Simpan API Keys
+        </button>
+        <button id="testAllKeysButton" style="background: linear-gradient(135deg, #17a2b8, #138496); flex: 1;">
+          🧪 Test Semua Keys
+        </button>
+      </div>
+      
+      <div id="apiKeyStatus" style="margin-top: 15px; padding: 10px; border-radius: 6px; background: #f8f9fa; font-size: 13px; color: #666;">
+        💡 <strong>Round Robin Status:</strong> <span id="roundRobinInfo">Belum ada API key</span>
+      </div>
+    </div>
+
+    <!-- Overlay Settings Section -->
+    <div class="section">
+      <h2>🎯 Overlay Settings</h2>
+      
+      <div class="toggle-container">
+        <div>
+          <div class="toggle-label">Tampilkan Jawaban sebagai Overlay</div>
+          <div class="toggle-description">Jawaban AI akan muncul sebagai overlay di halaman web, bukan di popup extension</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="overlayEnabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Floating Menu Section -->
+    <div class="section">
+      <h2>🚀 Floating Menu</h2>
+      
+      <div class="toggle-container">
+        <div>
+          <div class="toggle-label">Floating Scan Menu</div>
+          <div class="toggle-description">Menu scan yang mengambang di halaman web untuk akses cepat tanpa klik extension</div>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="floatingMenuEnabled" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Custom Shortcuts Section -->
+    <div class="section">
+      <h2>⌨️ Custom Keyboard Shortcuts</h2>
+      
+      <div style="margin-bottom: 15px;">
+        <label for="shortcutScanFull" style="font-size: 14px; margin-bottom: 5px;">Scan Seluruh Halaman:</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 13px; color: #666;">Ctrl+Shift+</span>
+          <select id="shortcutScanFull" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+            <option value="KeyS">S</option>
+            <option value="KeyQ">Q</option>
+            <option value="KeyW">W</option>
+            <option value="KeyE">E</option>
+            <option value="KeyR">R</option>
+            <option value="KeyT">T</option>
+            <option value="KeyU">U</option>
+            <option value="KeyI">I</option>
+            <option value="KeyO">O</option>
+            <option value="KeyP">P</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label for="shortcutSnipping" style="font-size: 14px; margin-bottom: 5px;">Pilih Area Soal (Snipping):</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 13px; color: #666;">Ctrl+Shift+</span>
+          <select id="shortcutSnipping" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+            <option value="KeyA">A</option>
+            <option value="KeyZ">Z</option>
+            <option value="KeyX">X</option>
+            <option value="KeyC">C</option>
+            <option value="KeyV">V</option>
+            <option value="KeyB">B</option>
+            <option value="KeyN">N</option>
+            <option value="KeyM">M</option>
+            <option value="KeyD">D</option>
+            <option value="KeyF">F</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 15px;">
+        <label for="shortcutToggleMenu" style="font-size: 14px; margin-bottom: 5px;">Toggle Floating Menu:</label>
+        <div style="display: flex; align-items: center; gap: 10px;">
+          <span style="font-size: 13px; color: #666;">Ctrl+Shift+</span>
+          <select id="shortcutToggleMenu" style="padding: 8px; border: 1px solid #ddd; border-radius: 4px; background: white;">
+            <option value="KeyF">F</option>
+            <option value="KeyG">G</option>
+            <option value="KeyH">H</option>
+            <option value="KeyJ">J</option>
+            <option value="KeyK">K</option>
+            <option value="KeyL">L</option>
+            <option value="KeyY">Y</option>
+            <option value="Digit1">1</option>
+            <option value="Digit2">2</option>
+            <option value="Digit3">3</option>
+          </select>
+        </div>
+      </div>
+
+      <button id="saveShortcutsButton" style="background: linear-gradient(135deg, #28a745, #20c997); margin-top: 10px;">
+        Simpan Shortcuts
+      </button>
+      
+      <div style="margin-top: 15px; font-size: 12px; color: #666; background: #f8f9fa; padding: 10px; border-radius: 6px;">
+        💡 <strong>Tips:</strong> Shortcuts bekerja di semua halaman web. Di Mac gunakan <strong>Cmd</strong> instead of Ctrl
+      </div>
+    </div>
+
+    <!-- Keyboard Shortcuts Info Section -->
+    <div class="section">
+      <h2>ℹ️ Current Shortcuts</h2>
+      <div class="shortcut-info">
+        <div class="shortcut-item">
+          <span>Scan Seluruh Halaman</span>
+          <span class="shortcut-key" id="currentScanShortcut">Ctrl+Shift+S</span>
+        </div>
+        <div class="shortcut-item">
+          <span>Pilih Area Soal (Snipping)</span>
+          <span class="shortcut-key" id="currentSnippingShortcut">Ctrl+Shift+A</span>
+        </div>
+        <div class="shortcut-item">
+          <span>Toggle Floating Menu</span>
+          <span class="shortcut-key" id="currentToggleShortcut">Ctrl+Shift+F</span>
+        </div>
+        <div style="margin-top: 10px; font-size: 12px; color: #666;">
+          💡 Di Mac gunakan <strong>Cmd</strong> instead of Ctrl
+        </div>
+      </div>
+    </div>
+    
+    <div id="status"></div>
+
+    <div class="help-links">
+      <a href="https://ai.google.dev/tutorials/get_started_web" target="_blank">Dokumentasi</a>
+      <a href="https://makersuite.google.com/app/apikey" target="_blank">Buat API Key</a>
+    </div>
+  </div>
+  
+  <script src="options.js"></script>
+</body>
+</html>
