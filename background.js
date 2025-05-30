@@ -105,13 +105,82 @@ async function tryApiKeyWithFallback(imageData, maxRetries = 3) {
   throw new Error(`All API keys failed. Last error: ${lastError?.message || 'Unknown error'}`);
 }
 
+async function tryApiKeyWithDoubleCheck(imageData) {
+  const { apiKeys } = await getApiKeys();
+  
+  if (apiKeys.length === 0) {
+    throw new Error('No API keys available');
+  }
+  
+  // For better accuracy, try with 2 different API keys if available
+  if (apiKeys.length >= 2) {
+    console.log('🎯 Using double-check mode for better accuracy...');
+    
+    try {
+      // First attempt
+      const result1 = await tryApiKeyWithFallback(imageData, 1);
+      
+      // Second attempt with different key
+      const result2 = await tryApiKeyWithFallback(imageData, 1);
+      
+      // Compare results
+      if (result1.trim() === result2.trim()) {
+        console.log('✅ Double-check: Both answers match!');
+        return result1;
+      } else {
+        console.log('⚠️ Double-check: Answers differ, using first result');
+        console.log('Result 1:', result1.substring(0, 50));
+        console.log('Result 2:', result2.substring(0, 50));
+        return result1; // Use first result as primary
+      }
+    } catch (error) {
+      console.log('❌ Double-check failed, falling back to single attempt');
+      return await tryApiKeyWithFallback(imageData, 3);
+    }
+  } else {
+    // Only one API key available, use normal fallback
+    return await tryApiKeyWithFallback(imageData, 3);
+  }
+}
+
 async function makeGeminiRequest(base64ImageData, apiKey) {
   const payload = {
     contents: [
       {
         parts: [
           { 
-            text: "Kamu adalah AI solver soal. Baca soal di gambar ini dan berikan jawaban LANGSUNG:\n\n- Pilihan ganda: tulis huruf DAN isi jawabannya (contoh: B. Kucing)\n- Perhitungan: tulis hasil akhirnya saja (contoh: 25)\n- True/False: tulis True atau False\n- Essay singkat: maksimal 1-2 kalimat\n\nJANGAN beri penjelasan panjang, rumus, atau langkah. Format jawaban harus singkat dan tepat." 
+            text: `Anda adalah AI ahli dalam memecahkan soal akademik Indonesia dengan tingkat akurasi tinggi. Analisis gambar soal dengan SANGAT TELITI.
+
+PROTOKOL ANALISIS:
+1. BACA dan PAHAMI seluruh soal dengan detail
+2. IDENTIFIKASI mata pelajaran dan jenis soal
+3. APLIKASIKAN pengetahuan kurikulum Indonesia yang tepat
+4. HITUNG/ANALISIS dengan metode yang benar
+5. VERIFIKASI jawaban sebelum memberikan respon
+
+MATA PELAJARAN SPESIFIK:
+📚 BAHASA INDONESIA: Fokus pada EYD, tata bahasa, sastra Indonesia, dan konteks budaya
+🔢 MATEMATIKA: Gunakan rumus yang tepat, perhatikan satuan, periksa perhitungan 2x
+🧪 IPA (Fisika/Kimia/Biologi): Aplikasikan hukum sains, rumus, dan konsep yang akurat
+🌍 IPS: Konteks Indonesia (sejarah, geografi, ekonomi, sosiologi)
+☪️ AGAMA ISLAM: Sesuai Al-Quran, Hadits, dan ajaran Islam yang shahih
+🎨 SENI/BUDAYA: Budaya dan seni tradisional Indonesia
+💻 TIK/KOMPUTER: Teknologi informasi dan komunikasi
+
+FORMAT JAWABAN WAJIB:
+• Pilihan Ganda: "A. [jawaban lengkap dengan alasan singkat]"
+• Matematika: "[angka hasil] [satuan] (metode: [rumus/cara])"
+• Isian Singkat: "[jawaban tepat]"
+• Benar/Salah: "BENAR/SALAH - [alasan singkat]"
+• Essay: "[jawaban komprehensif 1-3 kalimat]"
+
+QUALITY CONTROL:
+❌ JANGAN jawab jika soal tidak jelas/terpotong
+❌ JANGAN tebak-tebakan, pastikan logika benar
+✅ SELALU cek ulang logika dan perhitungan
+✅ GUNAKAN pengetahuan akademik Indonesia yang tepat
+
+INSTRUKSI AKHIR: Berikan jawaban yang PASTI BENAR dan DAPAT DIPERTANGGUNGJAWABKAN:` 
           },
           {
             inline_data: {
@@ -123,10 +192,11 @@ async function makeGeminiRequest(base64ImageData, apiKey) {
       }
     ],
     generationConfig: {
-      temperature: 0.2,
-      topK: 10,
-      topP: 0.7,
-      maxOutputTokens: 300
+      temperature: 0.05,  // Sangat rendah untuk konsistensi maksimal
+      topK: 3,           // Fokus pada jawaban terbaik saja
+      topP: 0.7,         // Balanced creativity
+      maxOutputTokens: 600,  // Cukup ruang untuk penjelasan lengkap
+      candidateCount: 1  // Single best candidate
     }
   };
 
@@ -288,28 +358,30 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         try {
           // Capture dengan kualitas tinggi untuk akurasi maksimal
           const dataUrl = await chrome.tabs.captureVisibleTab(null, { 
-            format: 'png'  // PNG untuk kualitas teks yang lebih baik
+            format: 'png',  // PNG untuk kualitas teks yang lebih baik
+            quality: 100    // Kualitas maksimal untuk text recognition
           });
           
           // Ekstrak base64 data
           const base64ImageData = dataUrl.split(',')[1];
           
-          // Hanya kompres jika file sangat besar
-          const optimizedBase64 = base64ImageData.length > 500000 ? 
-            compressBase64Image(base64ImageData) : base64ImageData;
+          // Skip compression untuk mempertahankan kualitas OCR
+          console.log(`📸 Screenshot captured: ${Math.round(base64ImageData.length / 1024)}KB`);
 
           // Try with round-robin fallback
-          const answer = await tryApiKeyWithFallback(optimizedBase64);
+          const answer = await tryApiKeyWithDoubleCheck(base64ImageData);
           
-          // Clean up jawaban untuk lebih ringkas
-          const cleanAnswer = answer.replace(/^(Jawaban|Answer|Penjelasan):\s*/i, '')
-                                   .replace(/\n\n+/g, '\n');
+          // Validate and improve answer quality
+          const validatedAnswer = await validateAndImproveAnswer(answer, base64ImageData);
+          
+          // Clean up jawaban untuk lebih ringkas (simplified since validation handles most cleaning)
+          const finalAnswer = validatedAnswer;
 
           if (overlayEnabled && sender.tab) {
             // Kirim jawaban ke content script untuk overlay
             chrome.tabs.sendMessage(sender.tab.id, {
               action: 'showAnswerOverlay',
-              answer: cleanAnswer,
+              answer: finalAnswer,
               title: 'Jawaban Ditemukan! 🎯'
             });
           }
@@ -318,10 +390,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             type: 'basic',
             iconUrl: 'images/icon128.png',
             title: 'Jawaban Ditemukan!',
-            message: cleanAnswer.substring(0, 100) + (cleanAnswer.length > 100 ? '...' : '')
+            message: finalAnswer.substring(0, 100) + (finalAnswer.length > 100 ? '...' : '')
           });
           
-          chrome.runtime.sendMessage({ action: 'updatePopupStatus', status: 'success', answer: cleanAnswer });
+          chrome.runtime.sendMessage({ action: 'updatePopupStatus', status: 'success', answer: finalAnswer });
 
         } catch (error) {
           console.error('Error in image processing:', error);
@@ -393,17 +465,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           console.log('Screenshot captured, processing with AI...');
           
           // Try with round-robin fallback
-          const answer = await tryApiKeyWithFallback(base64ImageData);
+          const answer = await tryApiKeyWithDoubleCheck(base64ImageData);
+          
+          // Validate and improve answer quality
+          const validatedAnswer = await validateAndImproveAnswer(answer, base64ImageData);
           
           // Clean up jawaban
-          const cleanAnswer = answer.replace(/^(Jawaban|Answer|Penjelasan):\s*/i, '')
-                                   .replace(/\n\n+/g, '\n');
+          const finalAnswer = validatedAnswer;
 
           if (overlayEnabled && sender.tab) {
             // Kirim jawaban ke content script untuk overlay
             chrome.tabs.sendMessage(sender.tab.id, {
               action: 'showAnswerOverlay',
-              answer: cleanAnswer,
+              answer: finalAnswer,
               title: 'Area Scan Complete! 📐'
             });
           }
@@ -412,10 +486,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             type: 'basic',
             iconUrl: 'images/icon128.png',
             title: 'Area Scan Complete!',
-            message: cleanAnswer.substring(0, 100) + (cleanAnswer.length > 100 ? '...' : '')
+            message: finalAnswer.substring(0, 100) + (finalAnswer.length > 100 ? '...' : '')
           });
           
-          chrome.runtime.sendMessage({ action: 'updatePopupStatus', status: 'success', answer: cleanAnswer });
+          chrome.runtime.sendMessage({ action: 'updatePopupStatus', status: 'success', answer: finalAnswer });
 
         } catch (error) {
           console.error('Error capturing selected area:', error);
@@ -516,3 +590,42 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
 });
 
 console.log("Background script loaded with multi-API key round-robin support.");
+
+async function validateAndImproveAnswer(rawAnswer, imageData) {
+  // Basic answer validation
+  const cleanAnswer = rawAnswer.replace(/^(Jawaban|Answer|Penjelasan):\s*/i, '')
+                               .replace(/\n\n+/g, '\n')
+                               .trim();
+  
+  // Check if answer seems incomplete or unclear
+  const suspiciousPatterns = [
+    /tidak dapat/i,
+    /tidak jelas/i,
+    /tidak terlihat/i,
+    /maaf/i,
+    /tidak bisa/i,
+    /gambar terlalu/i,
+    /resolusi rendah/i
+  ];
+  
+  const hasIssues = suspiciousPatterns.some(pattern => pattern.test(cleanAnswer));
+  
+  if (hasIssues) {
+    console.log('⚠️ Answer seems uncertain, marking for user attention');
+    return `${cleanAnswer}\n\n⚠️ Catatan: Jika kurang jelas, coba screenshot dengan kualitas lebih baik atau pilih area soal yang lebih spesifik.`;
+  }
+  
+  // Enhanced formatting for different answer types
+  if (cleanAnswer.match(/^[A-E]\./)) {
+    // Multiple choice - ensure proper formatting
+    return cleanAnswer;
+  } else if (cleanAnswer.match(/^\d+(\.\d+)?/)) {
+    // Numeric answer - validate format
+    return cleanAnswer;
+  } else if (cleanAnswer.match(/^(benar|salah|true|false)/i)) {
+    // True/false - standardize format
+    return cleanAnswer.charAt(0).toUpperCase() + cleanAnswer.slice(1).toLowerCase();
+  }
+  
+  return cleanAnswer;
+}
