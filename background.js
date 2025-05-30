@@ -33,24 +33,30 @@ async function getApiKeys() {
 }
 
 async function getNextApiKey() {
-  const { apiKeys, currentKeyIndex } = await getApiKeys();
-  
-  if (apiKeys.length === 0) {
-    return null;
-  }
-  
-  // Return current key
-  const currentKey = apiKeys[currentKeyIndex];
-  
-  // Move to next key for round-robin (cycle back to 0 if at end)
-  const nextIndex = (currentKeyIndex + 1) % apiKeys.length;
-  
-  // Save next index for future use
-  chrome.storage.sync.set({ 'currentKeyIndex': nextIndex });
-  
-  console.log(`Using API Key ${currentKeyIndex + 1}/${apiKeys.length} for request`);
-  
-  return currentKey;
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['geminiApiKeys', 'currentKeyIndex'], async function(result) {
+      const apiKeys = result.geminiApiKeys || [];
+      const currentIndex = result.currentKeyIndex || 0;
+      
+      if (apiKeys.length === 0) {
+        resolve(null);
+        return;
+      }
+      
+      // Get current key
+      const currentKey = apiKeys[currentIndex];
+      
+      // Calculate next index for round-robin (cycle back to 0 if at end)
+      const nextIndex = (currentIndex + 1) % apiKeys.length;
+      
+      // Update index immediately for next request
+      chrome.storage.sync.set({ 'currentKeyIndex': nextIndex }, () => {
+        console.log(`🔄 Round-robin: Using key ${currentIndex + 1}/${apiKeys.length}, next will be ${nextIndex + 1}`);
+        console.log(`Key preview: ${currentKey.substring(0, 15)}...`);
+        resolve(currentKey);
+      });
+    });
+  });
 }
 
 async function tryApiKeyWithFallback(imageData, maxRetries = 3) {
@@ -62,47 +68,62 @@ async function tryApiKeyWithFallback(imageData, maxRetries = 3) {
   
   let lastError = null;
   let attempts = 0;
+  const attemptedKeys = new Set(); // Track which keys we've tried
   
   // Try up to maxRetries or all available keys, whichever is smaller
   const maxAttempts = Math.min(maxRetries, apiKeys.length);
+  
+  console.log(`🚀 Starting API request with ${apiKeys.length} keys available, max ${maxAttempts} attempts`);
   
   while (attempts < maxAttempts) {
     try {
       const apiKey = await getNextApiKey();
       
       if (!apiKey || apiKey.trim() === '') {
+        console.log(`⚠️ Empty API key at attempt ${attempts + 1}`);
         attempts++;
         continue;
       }
       
-      console.log(`Attempt ${attempts + 1}/${maxAttempts} with API key ${apiKey.substring(0, 12)}...`);
+      // Check if we've already tried this key in this request
+      const keyPreview = apiKey.substring(0, 15);
+      if (attemptedKeys.has(keyPreview)) {
+        console.log(`🔁 Already tried key ${keyPreview}..., getting next one`);
+        continue;
+      }
+      
+      attemptedKeys.add(keyPreview);
+      
+      console.log(`🎯 Attempt ${attempts + 1}/${maxAttempts} with API key ${keyPreview}...`);
       
       const result = await makeGeminiRequest(imageData, apiKey);
       
       // If successful, return result
-      console.log(`✅ Success with API key ${apiKey.substring(0, 12)}...`);
+      console.log(`✅ SUCCESS with API key ${keyPreview}... after ${attempts + 1} attempts`);
       return result;
       
     } catch (error) {
-      console.log(`❌ Failed with API key attempt ${attempts + 1}: ${error.message}`);
+      console.log(`❌ FAILED attempt ${attempts + 1}: ${error.message}`);
       lastError = error;
       attempts++;
       
       // If it's a quota/rate limit error, try next key immediately
       if (error.status === 429 || error.status === 403) {
-        console.log('Quota/rate limit hit, trying next API key...');
+        console.log('💡 Quota/rate limit hit, immediately trying next API key...');
         continue;
       }
       
       // For other errors, still try next key but with slight delay
       if (attempts < maxAttempts) {
+        console.log(`⏳ Waiting 1s before next attempt...`);
         await new Promise(resolve => setTimeout(resolve, 1000));
       }
     }
   }
   
   // All keys failed
-  throw new Error(`All API keys failed. Last error: ${lastError?.message || 'Unknown error'}`);
+  console.error(`💥 ALL ${attemptedKeys.size} API keys failed after ${attempts} attempts`);
+  throw new Error(`All ${attemptedKeys.size} API keys failed. Last error: ${lastError?.message || 'Unknown error'}`);
 }
 
 async function tryApiKeyWithDoubleCheck(imageData) {
@@ -112,16 +133,17 @@ async function tryApiKeyWithDoubleCheck(imageData) {
     throw new Error('No API keys available');
   }
   
-  // Only use double-check if we have 3+ API keys (to ensure enough for fallback)
-  // Otherwise prioritize speed over redundancy
-  if (apiKeys.length >= 3) {
-    console.log('🎯 Using double-check mode for maximum accuracy...');
+  // Only use double-check if we have 2+ API keys to ensure rotation
+  if (apiKeys.length >= 2) {
+    console.log(`🎯 Double-check mode: ${apiKeys.length} keys available for cross-validation`);
     
     try {
-      // First attempt
+      // First attempt - will use current key in rotation
+      console.log('📍 First validation attempt...');
       const result1 = await tryApiKeyWithFallback(imageData, 1);
       
-      // Second attempt with different key
+      // Second attempt - will use next key in rotation
+      console.log('📍 Second validation attempt...');
       const result2 = await tryApiKeyWithFallback(imageData, 1);
       
       // Compare results - but don't be too strict about exact matches
@@ -129,20 +151,22 @@ async function tryApiKeyWithDoubleCheck(imageData) {
       const simplified2 = result2.trim().toLowerCase();
       
       if (simplified1 === simplified2 || simplified1.includes(simplified2) || simplified2.includes(simplified1)) {
-        console.log('✅ Double-check: Results are consistent');
+        console.log('✅ Double-check validation: Results are consistent');
         return result1; // Return first result (usually more complete)
       } else {
-        console.log('⚠️ Double-check: Minor differences, using first result');
+        console.log('⚠️ Double-check validation: Minor differences detected, using first result');
+        console.log(`Result 1: ${result1.substring(0, 50)}...`);
+        console.log(`Result 2: ${result2.substring(0, 50)}...`);
         return result1; // Use first result as primary
       }
     } catch (error) {
-      console.log('❌ Double-check failed, using single attempt for speed');
+      console.log('❌ Double-check validation failed, falling back to single attempt');
       return await tryApiKeyWithFallback(imageData, 2);
     }
   } else {
-    // Use single attempt for faster response
-    console.log('⚡ Using single attempt mode for faster response');
-    return await tryApiKeyWithFallback(imageData, 2);
+    // Use single attempt for faster response with only 1 key
+    console.log('⚡ Single key mode: Using direct attempt for faster response');
+    return await tryApiKeyWithFallback(imageData, 1);
   }
 }
 
@@ -293,15 +317,42 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     (async () => {
       try {
         const { apiKeys } = await getApiKeys();
+        
+        // Also get rotation info for debugging
+        const rotationInfo = await debugApiKeyRotation();
+        
         if (sender.tab) {
           chrome.tabs.sendMessage(sender.tab.id, {
             action: 'apiKeysReady',
-            keyCount: apiKeys.length
+            keyCount: apiKeys.length,
+            rotationInfo: rotationInfo
           });
         }
-        sendResponse({ status: 'status_sent', keyCount: apiKeys.length });
+        sendResponse({ 
+          status: 'status_sent', 
+          keyCount: apiKeys.length,
+          currentIndex: rotationInfo.currentIndex,
+          rotationActive: apiKeys.length > 1
+        });
       } catch (error) {
         console.error('Error getting API key status:', error);
+        sendResponse({ status: 'error', message: error.message });
+      }
+    })();
+    return true;
+  }
+  
+  // Add debug action for manual testing
+  if (request.action === 'debugApiRotation') {
+    (async () => {
+      try {
+        const rotationInfo = await debugApiKeyRotation();
+        sendResponse({ 
+          status: 'debug_complete', 
+          ...rotationInfo
+        });
+      } catch (error) {
+        console.error('Error debugging API rotation:', error);
         sendResponse({ status: 'error', message: error.message });
       }
     })();
@@ -555,9 +606,47 @@ chrome.runtime.onInstalled.addListener((details) => {
   }
 });
 
+// Function to reset API key rotation index
+async function resetApiKeyRotation() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.set({ 'currentKeyIndex': 0 }, () => {
+      console.log('🔄 API key rotation index reset to 0');
+      resolve();
+    });
+  });
+}
+
+// Function to debug current API key rotation status
+async function debugApiKeyRotation() {
+  return new Promise((resolve) => {
+    chrome.storage.sync.get(['geminiApiKeys', 'currentKeyIndex'], function(result) {
+      const apiKeys = result.geminiApiKeys || [];
+      const currentIndex = result.currentKeyIndex || 0;
+      
+      console.log('🔍 DEBUG - API Key Rotation Status:');
+      console.log(`   Total keys: ${apiKeys.length}`);
+      console.log(`   Current index: ${currentIndex}`);
+      console.log(`   Next key will be: ${(currentIndex + 1) % apiKeys.length}`);
+      
+      apiKeys.forEach((key, index) => {
+        const isActive = index === currentIndex;
+        console.log(`   Key ${index + 1}: ${key.substring(0, 15)}... ${isActive ? '← CURRENT' : ''}`);
+      });
+      
+      resolve({ apiKeys, currentIndex });
+    });
+  });
+}
+
 // Function to notify all tabs that API keys are ready
 async function notifyAllTabsApiKeysReady() {
   const { apiKeys } = await getApiKeys();
+  
+  // Reset rotation when API keys are updated
+  await resetApiKeyRotation();
+  
+  // Debug current rotation status
+  await debugApiKeyRotation();
   
   chrome.tabs.query({}, function(tabs) {
     tabs.forEach(tab => {
@@ -570,7 +659,7 @@ async function notifyAllTabsApiKeysReady() {
     });
   });
   
-  console.log(`✅ Notified all tabs: ${apiKeys.length} API keys ready for round-robin`);
+  console.log(`✅ Notified all tabs: ${apiKeys.length} API keys ready for round-robin rotation`);
 }
 
 // Listen for storage changes to notify tabs when API keys are updated
@@ -620,4 +709,52 @@ async function validateAndImproveAnswer(rawAnswer, imageData) {
   
   // For other answers, just return clean version without additions
   return cleanAnswer;
+}
+
+// Test function untuk manual testing di console
+async function testApiRotation(testCount = 5) {
+  console.log(`🧪 Testing API rotation with ${testCount} requests...`);
+  
+  const { apiKeys } = await getApiKeys();
+  if (apiKeys.length === 0) {
+    console.log('❌ No API keys available for testing');
+    return;
+  }
+  
+  console.log(`📊 Available API keys: ${apiKeys.length}`);
+  
+  const usedKeys = [];
+  
+  for (let i = 0; i < testCount; i++) {
+    const key = await getNextApiKey();
+    const keyPreview = key ? key.substring(0, 15) + '...' : 'null';
+    usedKeys.push(keyPreview);
+    console.log(`Request ${i + 1}: Using key ${keyPreview}`);
+    
+    // Small delay to simulate real usage
+    await new Promise(resolve => setTimeout(resolve, 100));
+  }
+  
+  console.log('🔄 Rotation pattern:');
+  usedKeys.forEach((key, index) => {
+    console.log(`  ${index + 1}. ${key}`);
+  });
+  
+  // Verify round-robin pattern
+  const uniqueKeys = [...new Set(usedKeys)];
+  console.log(`📈 Used ${uniqueKeys.length} unique keys out of ${apiKeys.length} available`);
+  
+  if (apiKeys.length > 1) {
+    const expectedRotations = Math.floor(testCount / apiKeys.length);
+    console.log(`Expected ${expectedRotations} full rotations with remainder`);
+  }
+  
+  return { usedKeys, uniqueKeys };
+}
+
+// Make test function available globally for console testing
+if (typeof globalThis !== 'undefined') {
+  globalThis.testApiRotation = testApiRotation;
+  globalThis.debugApiKeyRotation = debugApiKeyRotation;
+  globalThis.resetApiKeyRotation = resetApiKeyRotation;
 }
