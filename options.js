@@ -1,3 +1,13 @@
+/**
+ * Soal Scanner AI - Options Script
+ * Settings page untuk API key management dan configuration
+ * 
+ * @author Dany Pratmanto
+ * @contact WhatsApp: 08974041777
+ * @version 2.0.0
+ * @description Multi API key management dengan round-robin configuration
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
   const overlayEnabledToggle = document.getElementById('overlayEnabled');
   const floatingMenuEnabledToggle = document.getElementById('floatingMenuEnabled');

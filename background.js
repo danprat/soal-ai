@@ -1,3 +1,13 @@
+/**
+ * Soal Scanner AI - Background Script
+ * Chrome Extension untuk scan soal dengan AI Gemini
+ * 
+ * @author Dany Pratmanto
+ * @contact WhatsApp: 08974041777
+ * @version 2.0.0
+ * @description Multi API key support dengan round-robin load balancing
+ */
+
 // Gemini API Key - ideally, this should be stored securely and fetched
 // For now, we'll try to get it from chrome.storage.sync
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=';

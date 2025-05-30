@@ -1,3 +1,13 @@
+/**
+ * Soal Scanner AI - Popup Script
+ * Extension popup dengan status indicators dan scan controls
+ * 
+ * @author Dany Pratmanto
+ * @contact WhatsApp: 08974041777
+ * @version 2.0.0
+ * @description Multi API key aware popup dengan real-time updates
+ */
+
 document.addEventListener('DOMContentLoaded', function() {
   const scanButton = document.getElementById('scanButton');
   const snippingButton = document.getElementById('snippingButton');

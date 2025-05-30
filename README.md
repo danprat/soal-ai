@@ -197,17 +197,16 @@ Feel free untuk kontribusi! Silakan buat issue atau pull request untuk:
 - UI/UX enhancements
 - Accessibility improvements
 
-## 📄 License
+## 📞 **Contact & Support**
 
-MIT License - silakan gunakan dan modifikasi sesuai kebutuhan.
+**👨‍💻 Author:** Dany Pratmanto  
+**📱 WhatsApp:** [08974041777](https://wa.me/6208974041777)  
+**📧 Issues:** [GitHub Issues](https://github.com/danprat/soal-ai/issues)
 
 ---
 
-**Happy Learning! 🎓** Semoga extension ini membantu proses belajar kamu jadi lebih efisien dengan pengalaman overlay yang seamless!
+## 📄 **License**
 
-## ✅ **Hasil yang Diharapkan:**
+This project is open source. Feel free to contribute atau request features baru!
 
-- **Pilihan ganda**: `B. Kucing`
-- **Perhitungan**: `25`
-- **True/False**: `True`
-- **Essay**: `Jakarta adalah ibu kota Indonesia` 
+**Made with ❤️ by Dany Pratmanto** 

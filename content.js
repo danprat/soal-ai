@@ -1,3 +1,13 @@
+/**
+ * Soal Scanner AI - Content Script
+ * Floating menu dan overlay system untuk scanning soal
+ * 
+ * @author Dany Pratmanto
+ * @contact WhatsApp: 08974041777
+ * @version 2.0.0
+ * @description Draggable floating menu dengan keyboard shortcuts
+ */
+
 // Content script untuk floating menu scan
 (function() {
   'use strict';
