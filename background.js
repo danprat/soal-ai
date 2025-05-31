@@ -585,6 +585,14 @@ function compressBase64Image(base64Data, quality = 0.8) {
 
 // Listener for when the extension is installed or updated
 chrome.runtime.onInstalled.addListener((details) => {
+  // Create context menu untuk jawab soal dari teks
+  chrome.contextMenus.create({
+    id: 'jawab-soal-teks',
+    title: '🤖 Jawab Soal dengan AI',
+    contexts: ['selection'],
+    documentUrlPatterns: ['http://*/*', 'https://*/*']
+  });
+
   if (details.reason === "install") {
     // On first install, you might want to open an options page or a welcome page.
     // For now, let's check if an API key is set and if not, prompt.
@@ -757,4 +765,335 @@ if (typeof globalThis !== 'undefined') {
   globalThis.testApiRotation = testApiRotation;
   globalThis.debugApiKeyRotation = debugApiKeyRotation;
   globalThis.resetApiKeyRotation = resetApiKeyRotation;
+}
+
+// Context menu click handler
+chrome.contextMenus.onClicked.addListener(async (info, tab) => {
+  if (info.menuItemId === 'jawab-soal-teks') {
+    const selectedText = info.selectionText?.trim();
+    
+    if (!selectedText) {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'images/icon48.png',
+        title: 'Tidak ada teks',
+        message: 'Silakan pilih teks soal terlebih dahulu.'
+      });
+      return;
+    }
+
+    console.log('📝 Processing selected text:', selectedText.substring(0, 100) + '...');
+    
+    try {
+      const { apiKeys } = await getApiKeys();
+      if (apiKeys.length === 0) {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'images/icon48.png',
+          title: 'No API Keys',
+          message: 'Please add Gemini API Keys in the extension options.'
+        });
+        
+        // Show error overlay di tab
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'showErrorOverlay',
+          message: 'Belum ada API Key. Klik icon extension dan pilih Settings untuk menambah API Key.',
+          title: 'API Key Diperlukan'
+        });
+        return;
+      }
+
+      // Check overlay setting
+      const overlayEnabled = await getOverlaySetting();
+
+      if (overlayEnabled) {
+        // Show loading overlay
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'showLoadingOverlay',
+          message: `Memproses soal teks dengan AI (${apiKeys.length} keys)...`
+        });
+      }
+
+      // Process text dengan AI
+      const answer = await processTextWithAI(selectedText);
+      
+      if (overlayEnabled) {
+        // Show answer overlay
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'showAnswerOverlay',
+          answer: answer,
+          title: 'Jawaban dari Teks! 📝'
+        });
+      }
+      
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'images/icon128.png',
+        title: 'Soal Teks Dijawab!',
+        message: answer.substring(0, 100) + (answer.length > 100 ? '...' : '')
+      });
+      
+      // Update popup status
+      chrome.runtime.sendMessage({ 
+        action: 'updatePopupStatus', 
+        status: 'success', 
+        answer: answer,
+        source: 'text'
+      });
+
+    } catch (error) {
+      console.error('Error processing text:', error);
+      const errorMessage = error.message || 'Terjadi kesalahan saat memproses teks.';
+      
+      const overlayEnabled = await getOverlaySetting();
+      if (overlayEnabled) {
+        chrome.tabs.sendMessage(tab.id, {
+          action: 'showErrorOverlay',
+          message: `❌ ${errorMessage}`,
+          title: 'Text Processing Error'
+        });
+      }
+      
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'images/icon48.png',
+        title: 'Processing Error',
+        message: errorMessage
+      });
+      
+      chrome.runtime.sendMessage({ 
+        action: 'updatePopupStatus', 
+        status: 'error', 
+        message: errorMessage 
+      });
+    }
+  }
+});
+
+// Function untuk process text dengan AI
+async function processTextWithAI(questionText) {
+  try {
+    console.log(`📝 Processing text question: ${questionText.substring(0, 50)}...`);
+    
+    // Use round-robin system untuk text processing
+    const answer = await tryTextWithDoubleCheck(questionText);
+    
+    // Validate and improve answer
+    const validatedAnswer = await validateTextAnswer(answer, questionText);
+    
+    return validatedAnswer;
+    
+  } catch (error) {
+    console.error('Error in text processing:', error);
+    throw error;
+  }
+}
+
+// Function untuk double-check text processing
+async function tryTextWithDoubleCheck(questionText) {
+  const { apiKeys } = await getApiKeys();
+  
+  if (apiKeys.length === 0) {
+    throw new Error('No API keys available');
+  }
+  
+  // Use double-check for text if we have 2+ keys
+  if (apiKeys.length >= 2) {
+    console.log(`🎯 Text double-check mode: ${apiKeys.length} keys available`);
+    
+    try {
+      // First attempt
+      console.log('📍 First text validation attempt...');
+      const result1 = await tryTextWithFallback(questionText, 1);
+      
+      // Second attempt with different key
+      console.log('📍 Second text validation attempt...');
+      const result2 = await tryTextWithFallback(questionText, 1);
+      
+      // Compare results
+      const simplified1 = result1.trim().toLowerCase();
+      const simplified2 = result2.trim().toLowerCase();
+      
+      if (simplified1 === simplified2 || simplified1.includes(simplified2) || simplified2.includes(simplified1)) {
+        console.log('✅ Text double-check: Results are consistent');
+        return result1;
+      } else {
+        console.log('⚠️ Text double-check: Minor differences, using first result');
+        return result1;
+      }
+    } catch (error) {
+      console.log('❌ Text double-check failed, using single attempt');
+      return await tryTextWithFallback(questionText, 2);
+    }
+  } else {
+    // Single attempt for single key
+    console.log('⚡ Single key mode for text processing');
+    return await tryTextWithFallback(questionText, 1);
+  }
+}
+
+// Function untuk text processing dengan fallback
+async function tryTextWithFallback(questionText, maxRetries = 3) {
+  const { apiKeys } = await getApiKeys();
+  
+  if (apiKeys.length === 0) {
+    throw new Error('No API keys available');
+  }
+  
+  let lastError = null;
+  let attempts = 0;
+  const attemptedKeys = new Set();
+  
+  const maxAttempts = Math.min(maxRetries, apiKeys.length);
+  
+  console.log(`🚀 Starting text AI request with ${apiKeys.length} keys available, max ${maxAttempts} attempts`);
+  
+  while (attempts < maxAttempts) {
+    try {
+      const apiKey = await getNextApiKey();
+      
+      if (!apiKey || apiKey.trim() === '') {
+        console.log(`⚠️ Empty API key at text attempt ${attempts + 1}`);
+        attempts++;
+        continue;
+      }
+      
+      const keyPreview = apiKey.substring(0, 15);
+      if (attemptedKeys.has(keyPreview)) {
+        console.log(`🔁 Already tried key ${keyPreview}... for text, getting next one`);
+        continue;
+      }
+      
+      attemptedKeys.add(keyPreview);
+      
+      console.log(`🎯 Text attempt ${attempts + 1}/${maxAttempts} with API key ${keyPreview}...`);
+      
+      const result = await makeGeminiTextRequest(questionText, apiKey);
+      
+      console.log(`✅ SUCCESS text processing with API key ${keyPreview}... after ${attempts + 1} attempts`);
+      return result;
+      
+    } catch (error) {
+      console.log(`❌ FAILED text attempt ${attempts + 1}: ${error.message}`);
+      lastError = error;
+      attempts++;
+      
+      if (error.status === 429 || error.status === 403) {
+        console.log('💡 Quota/rate limit hit in text processing, trying next API key...');
+        continue;
+      }
+      
+      if (attempts < maxAttempts) {
+        console.log(`⏳ Waiting 1s before next text attempt...`);
+        await new Promise(resolve => setTimeout(resolve, 1000));
+      }
+    }
+  }
+  
+  console.error(`💥 ALL ${attemptedKeys.size} API keys failed for text processing after ${attempts} attempts`);
+  throw new Error(`All ${attemptedKeys.size} API keys failed for text processing. Last error: ${lastError?.message || 'Unknown error'}`);
+}
+
+// Function untuk Gemini API request dengan text
+async function makeGeminiTextRequest(questionText, apiKey) {
+  const payload = {
+    contents: [
+      {
+        parts: [
+          { 
+            text: `Anda AI ahli akademik Indonesia. Jawab soal berikut dengan SINGKAT tapi AKURAT.
+
+SOAL:
+${questionText}
+
+INSTRUKSI:
+1. Baca soal dengan teliti
+2. Berikan jawaban yang PASTI BENAR
+3. Format jawaban harus RINGKAS dan LANGSUNG
+
+FORMAT JAWABAN:
+• Pilihan Ganda: "A. [jawaban]"
+• Matematika: "[angka] [satuan]"
+• Isian: "[jawaban singkat]"
+• True/False: "Benar" atau "Salah"
+• Essay: "[1 kalimat jawaban]"
+
+PENTING:
+- JANGAN beri penjelasan panjang
+- JANGAN tulis rumus atau langkah
+- FOKUS pada jawaban yang tepat dan singkat
+- Gunakan pengetahuan kurikulum Indonesia
+
+Berikan jawaban FINAL:` 
+          }
+        ]
+      }
+    ],
+    generationConfig: {
+      temperature: 0.05,
+      topK: 2,
+      topP: 0.6,
+      maxOutputTokens: 150,
+      candidateCount: 1
+    }
+  };
+
+  const response = await fetch(GEMINI_API_URL + apiKey, {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    const error = new Error(errorData.error?.message || `HTTP error! status: ${response.status}`);
+    error.status = response.status;
+    throw error;
+  }
+
+  const result = await response.json();
+  
+  if (!result.candidates || !result.candidates[0] || 
+      !result.candidates[0].content || !result.candidates[0].content.parts ||
+      !result.candidates[0].content.parts[0] || !result.candidates[0].content.parts[0].text) {
+    throw new Error('No valid response from Gemini API for text');
+  }
+
+  return result.candidates[0].content.parts[0].text.trim();
+}
+
+// Function untuk validate text answer
+async function validateTextAnswer(rawAnswer, questionText) {
+  // Basic cleaning untuk text answers
+  const cleanAnswer = rawAnswer.replace(/^(Jawaban|Answer|Penjelasan):\s*/i, '')
+                               .replace(/\n\n+/g, '\n')
+                               .trim();
+  
+  // Check suspicious patterns
+  const suspiciousPatterns = [
+    /tidak dapat/i,
+    /tidak jelas/i,
+    /maaf/i,
+    /tidak bisa/i,
+    /teks terlalu/i
+  ];
+  
+  const hasIssues = suspiciousPatterns.some(pattern => pattern.test(cleanAnswer));
+  
+  if (hasIssues) {
+    return "Soal teks tidak jelas, coba formulasi yang lebih spesifik";
+  }
+  
+  // Keep formatting simple
+  if (cleanAnswer.match(/^[A-E]\./)) {
+    return cleanAnswer;
+  } else if (cleanAnswer.match(/^\d+(\.\d+)?/)) {
+    return cleanAnswer;
+  } else if (cleanAnswer.match(/^(benar|salah|true|false)/i)) {
+    return cleanAnswer.charAt(0).toUpperCase() + cleanAnswer.slice(1).toLowerCase();
+  }
+  
+  return cleanAnswer;
 }

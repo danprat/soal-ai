@@ -713,7 +713,9 @@ document.addEventListener('DOMContentLoaded', function() {
           break;
         case 'success':
           enableButtons();
-          tampilkanSukses('Jawaban:', request.answer);
+          const source = request.source === 'text' ? 'Dari Teks:' : 'Dari Screenshot:';
+          const sourceIcon = request.source === 'text' ? '📝' : '📸';
+          tampilkanSukses(`${sourceIcon} ${source}`, request.answer, request.source);
           break;
         case 'error':
           enableButtons();
@@ -796,17 +798,27 @@ document.addEventListener('DOMContentLoaded', function() {
   }
 
   // Fungsi helper untuk tampilkan sukses dengan answer
-  function tampilkanSukses(title, answer) {
+  function tampilkanSukses(title, answer, source = 'screenshot') {
     // Format jawaban untuk tampilan yang lebih baik
     const formattedAnswer = answer.replace(/\n/g, '<br>');
     
+    // Different styling berdasarkan source
+    const borderColor = source === 'text' ? '#007bff' : '#28a745';
+    const bgColor = source === 'text' ? '#e3f2fd' : '#f8f9fa';
+    const tipMessage = source === 'text' 
+      ? '💡 Tips: Pilih teks yang lebih spesifik untuk hasil yang lebih akurat'
+      : '💡 Tips: Gunakan snipping untuk area yang lebih spesifik';
+    
     statusDiv.innerHTML = `
-      <div style="color: #28a745; font-weight: bold; margin-bottom: 8px;">${title}</div>
-      <div style="background: #f8f9fa; padding: 10px; border-radius: 6px; font-size: 13px; line-height: 1.4; max-height: 200px; overflow-y: auto; border-left: 3px solid #28a745;">
+      <div style="color: ${borderColor}; font-weight: bold; margin-bottom: 8px;">${title}</div>
+      <div style="background: ${bgColor}; padding: 10px; border-radius: 6px; font-size: 13px; line-height: 1.4; max-height: 200px; overflow-y: auto; border-left: 3px solid ${borderColor};">
         ${formattedAnswer}
       </div>
       <div style="margin-top: 8px; font-size: 11px; color: #6c757d;">
-        💡 Tips: Gunakan snipping untuk area yang lebih spesifik
+        ${tipMessage}
+      </div>
+      <div style="margin-top: 5px; font-size: 10px; color: #adb5bd;">
+        Source: ${source === 'text' ? 'Context Menu → Text Processing' : 'Screen Capture → Image Recognition'}
       </div>
     `;
     enableButtons();

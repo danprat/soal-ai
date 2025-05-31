@@ -1,35 +1,73 @@
 # 🤖 Soal Scanner AI Extension
 
-Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI dengan overlay jawaban langsung di halaman web.
+Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI dengan overlay jawaban langsung di halaman web. **PLUS fitur baru: jawab soal dari teks dengan context menu!**
 
 ## 🚀 Fitur
 
-- ✅ Screenshot otomatis halaman web dengan kompresi optimal
-- 🤖 AI-powered question answering dengan Gemini 2.0 Flash
-- 📸 Kompresi dan optimasi gambar untuk respon lebih cepat
-- 💬 Prompting yang dioptimasi untuk jawaban singkat dan akurat
-- ⚙️ Settings page yang user-friendly dengan validasi API key
-- 🔄 Real-time feedback dan status update
-- 📱 UI yang modern dan responsive
-- 🎯 **Overlay jawaban langsung di halaman web** - jawaban muncul sebagai popup di halaman, bukan di extension popup
+- ✅ **Screenshot otomatis** halaman web dengan kompresi optimal
+- 🤖 **AI-powered question answering** dengan Gemini 2.0 Flash
+- 📝 **NEW: Context menu untuk jawab soal dari teks** - pilih teks soal, klik kanan, jawab langsung!
+- 🔄 **Multi API key support** dengan round-robin load balancing
+- 🎛️ **Floating menu** yang bisa di-drag untuk akses cepat
+- ⌨️ **Custom keyboard shortcuts** yang bisa disesuaikan
+- 📸 **Kompresi dan optimasi gambar** untuk respon lebih cepat
+- 💬 **Prompting yang dioptimasi** untuk jawaban singkat dan akurat
+- ⚙️ **Settings page** yang user-friendly dengan validasi API key
+- 🔄 **Real-time feedback** dan status update
+- 📱 **UI yang modern** dan responsive
+- 🎯 **Overlay jawaban langsung** di halaman web - jawaban muncul sebagai popup di halaman
 - 📐 **Snipping tool** untuk pilih area soal spesifik
 - 📋 **Copy jawaban** dengan satu klik langsung dari overlay
 
-## 🆕 Fitur Overlay Baru
+## 🆕 Fitur Terbaru v2.1
 
-### Overlay Jawaban di Halaman Web
-- **Jawaban muncul langsung di halaman** sebagai overlay yang cantik dan modern
-- **Auto-close** setelah 30 detik atau bisa ditutup manual
-- **Copy button** untuk salin jawaban dengan sekali klik
-- **Loading indicator** dengan spinner saat AI memproses
-- **Error overlay** untuk notifikasi error yang jelas
-- **Responsive design** yang works di semua ukuran layar
+### 📝 Context Menu - Jawab Soal dari Teks
+- **Select teks soal** di halaman web apa saja
+- **Klik kanan** → pilih "🤖 Jawab Soal dengan AI"  
+- **Jawaban muncul instant** dalam overlay yang sama seperti screenshot
+- **Round-robin API keys** untuk load balancing otomatis
+- **Perfect untuk soal berbentuk teks** yang tidak perlu screenshot
 
-### Pengalaman User yang Lebih Baik
-- Tidak perlu buka-tutup popup extension berulang kali
-- Jawaban tetap terlihat sambil scroll halaman
-- Copy jawaban langsung tanpa select manual
-- Visual feedback yang lebih jelas dan menarik
+### Cara Pakai Context Menu:
+1. **Highlight/select teks soal** di halaman web (Wikipedia, Google Docs, PDF viewer, dll)
+2. **Klik kanan** pada teks yang diselect
+3. **Pilih "🤖 Jawab Soal dengan AI"** dari context menu
+4. **Tunggu loading** - overlay AI processing akan muncul
+5. **Lihat jawaban** - hasil muncul dalam overlay yang sama dengan screenshot mode
+6. **Copy atau tutup** - sama seperti fitur screenshot
+
+### Kelebihan Mode Teks:
+- ⚡ **Lebih cepat** - tidak perlu capture dan process gambar
+- 🎯 **Lebih akurat** - AI langsung baca teks tanpa OCR
+- 📱 **Works di semua platform** - desktop, mobile, tablet
+- 📄 **Support semua format** - PDF, Google Docs, Wikipedia, website, dll
+- 🔄 **Auto round-robin** - pakai multiple API keys secara bergantian
+
+## 🎯 Mode Penggunaan
+
+### 1. 📝 Context Menu (BARU!) - Untuk Soal Text
+**Best untuk:** Soal yang sudah dalam bentuk teks digital
+```
+SELECT teks soal → RIGHT CLICK → "🤖 Jawab Soal dengan AI" → DONE!
+```
+
+### 2. 📐 Snipping Tool - Untuk Area Spesifik  
+**Best untuk:** Screenshot area tertentu yang berisi soal
+```
+Extension Icon → "📐 Pilih Area Soal" → Drag area → AI process
+```
+
+### 3. 📸 Full Page Scan - Untuk Seluruh Halaman
+**Best untuk:** Halaman yang isinya mayoritas soal
+```
+Extension Icon → "📸 Scan Seluruh Halaman" → AI process
+```
+
+### 4. 🎛️ Floating Menu - Quick Access
+**Best untuk:** Akses cepat tanpa buka popup extension
+```
+Floating button → Expand → Pilih mode scan
+```
 
 ## 🎯 Optimasi Terbaru
 
