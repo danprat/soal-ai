@@ -1,35 +1,90 @@
 # 🤖 Soal Scanner AI Extension
 
-Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI dengan overlay jawaban langsung di halaman web.
+Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI dengan overlay jawaban langsung di halaman web. **PLUS fitur baru: jawab soal dari teks dengan context menu!**
 
 ## 🚀 Fitur
 
-- ✅ Screenshot otomatis halaman web dengan kompresi optimal
-- 🤖 AI-powered question answering dengan Gemini 2.0 Flash
-- 📸 Kompresi dan optimasi gambar untuk respon lebih cepat
-- 💬 Prompting yang dioptimasi untuk jawaban singkat dan akurat
-- ⚙️ Settings page yang user-friendly dengan validasi API key
-- 🔄 Real-time feedback dan status update
-- 📱 UI yang modern dan responsive
-- 🎯 **Overlay jawaban langsung di halaman web** - jawaban muncul sebagai popup di halaman, bukan di extension popup
+- ✅ **Screenshot otomatis** halaman web dengan kompresi optimal
+- 🤖 **AI-powered question answering** dengan Gemini 2.0 Flash
+- 📝 **NEW: Context menu untuk jawab soal dari teks** - pilih teks soal, klik kanan, jawab langsung!
+- 🔄 **Multi API key support** dengan round-robin load balancing
+- 🎛️ **Floating menu** yang bisa di-drag untuk akses cepat
+- ⌨️ **Custom keyboard shortcuts** yang bisa disesuaikan
+- 📸 **Kompresi dan optimasi gambar** untuk respon lebih cepat
+- 💬 **Prompting yang dioptimasi** untuk jawaban singkat dan akurat
+- ⚙️ **Settings page** yang user-friendly dengan validasi API key
+- 🔄 **Real-time feedback** dan status update
+- 📱 **UI yang modern** dan responsive
+- 🎯 **Overlay jawaban langsung** di halaman web - jawaban muncul sebagai popup di halaman
 - 📐 **Snipping tool** untuk pilih area soal spesifik
 - 📋 **Copy jawaban** dengan satu klik langsung dari overlay
 
-## 🆕 Fitur Overlay Baru
+## 🆕 Fitur Terbaru v2.2
 
-### Overlay Jawaban di Halaman Web
-- **Jawaban muncul langsung di halaman** sebagai overlay yang cantik dan modern
-- **Auto-close** setelah 30 detik atau bisa ditutup manual
-- **Copy button** untuk salin jawaban dengan sekali klik
-- **Loading indicator** dengan spinner saat AI memproses
-- **Error overlay** untuk notifikasi error yang jelas
-- **Responsive design** yang works di semua ukuran layar
+### 🛡️ Security Bypass - BARU!
+- **Override website restrictions** yang blokir right-click, text selection, copy-paste
+- **Auto-detection** website dengan security blocks dan bypass otomatis
+- **Manual toggle** di Settings untuk enable/disable
+- **Perfect untuk:** E-learning sites, protected documents, restricted PDFs
+- **Bypass semua:** Right-click menu, text selection, keyboard shortcuts, developer tools
 
-### Pengalaman User yang Lebih Baik
-- Tidak perlu buka-tutup popup extension berulang kali
-- Jawaban tetap terlihat sambil scroll halaman
-- Copy jawaban langsung tanpa select manual
-- Visual feedback yang lebih jelas dan menarik
+### 📝 Context Menu - Jawab Soal dari Teks
+- **Select teks soal** di halaman web apa saja
+- **Klik kanan** → pilih "🤖 Jawab Soal dengan AI"  
+- **Jawaban muncul instant** dalam overlay yang sama seperti screenshot
+- **Round-robin API keys** untuk load balancing otomatis
+- **Perfect untuk soal berbentuk teks** yang tidak perlu screenshot
+
+### Cara Pakai Context Menu:
+1. **Highlight/select teks soal** di halaman web (Wikipedia, Google Docs, PDF viewer, dll)
+2. **Klik kanan** pada teks yang diselect
+3. **Pilih "🤖 Jawab Soal dengan AI"** dari context menu
+4. **Tunggu loading** - overlay AI processing akan muncul
+5. **Lihat jawaban** - hasil muncul dalam overlay yang sama dengan screenshot mode
+6. **Copy atau tutup** - sama seperti fitur screenshot
+
+### 🛡️ Security Bypass Features:
+- **Right-click restoration** - Aktifkan context menu yang diblokir website
+- **Text selection** - Bolehkan select dan copy teks di protected pages  
+- **Keyboard shortcuts** - Restore Ctrl+C, Ctrl+V, Ctrl+A, F12, dll
+- **Developer tools** - Unblock F12 dan developer console
+- **Copy/paste operations** - Override copy protection
+- **Auto-detection** - Deteksi otomatis dan apply bypass di restricted sites
+- **Manual control** - Toggle on/off di Settings sesuai kebutuhan
+
+### Kelebihan Mode Teks + Security Bypass:
+- ⚡ **Lebih cepat** - tidak perlu capture dan process gambar
+- 🎯 **Lebih akurat** - AI langsung baca teks tanpa OCR
+- 🛡️ **Bypass restrictions** - Works di protected sites yang blokir copy-paste
+- 📱 **Works di semua platform** - desktop, mobile, tablet
+- 📄 **Support semua format** - PDF, Google Docs, Wikipedia, protected sites
+- 🔄 **Auto round-robin** - pakai multiple API keys secara bergantian
+
+## 🎯 Mode Penggunaan
+
+### 1. 📝 Context Menu (BARU!) - Untuk Soal Text
+**Best untuk:** Soal yang sudah dalam bentuk teks digital
+```
+SELECT teks soal → RIGHT CLICK → "🤖 Jawab Soal dengan AI" → DONE!
+```
+
+### 2. 📐 Snipping Tool - Untuk Area Spesifik  
+**Best untuk:** Screenshot area tertentu yang berisi soal
+```
+Extension Icon → "📐 Pilih Area Soal" → Drag area → AI process
+```
+
+### 3. 📸 Full Page Scan - Untuk Seluruh Halaman
+**Best untuk:** Halaman yang isinya mayoritas soal
+```
+Extension Icon → "📸 Scan Seluruh Halaman" → AI process
+```
+
+### 4. 🎛️ Floating Menu - Quick Access
+**Best untuk:** Akses cepat tanpa buka popup extension
+```
+Floating button → Expand → Pilih mode scan
+```
 
 ## 🎯 Optimasi Terbaru
 

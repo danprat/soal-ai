@@ -41,6 +41,11 @@
   
   window.soalScannerLoaded = true;
 
+  // Security bypass system
+  let securityBypassEnabled = false;
+  let originalEventHandlers = new Map();
+  let blockedSelectors = [];
+
   let floatingMenu = null;
   let isSnipping = false;
   let selectionBox = null;
@@ -56,9 +61,248 @@
     toggleMenu: 'KeyF'
   };
 
+  // 🛡️ SECURITY BYPASS FUNCTIONS
+  function enableSecurityBypass() {
+    if (securityBypassEnabled) return;
+    
+    console.log('🛡️ Enabling security bypass...');
+    securityBypassEnabled = true;
+    
+    // 1. Override Right-Click Block
+    document.addEventListener('contextmenu', forceEnableContextMenu, true);
+    
+    // 2. Override Text Selection Block  
+    document.addEventListener('selectstart', forceEnableSelection, true);
+    document.addEventListener('mousedown', forceEnableSelection, true);
+    
+    // 3. Override Copy/Paste Block
+    document.addEventListener('copy', forceEnableCopy, true);
+    document.addEventListener('paste', forceEnablePaste, true);
+    document.addEventListener('cut', forceEnableCut, true);
+    
+    // 4. Override Keyboard Shortcuts Block
+    document.addEventListener('keydown', forceEnableKeyboard, true);
+    
+    // 5. Remove CSS that blocks selection
+    removeSelectionBlockCSS();
+    
+    // 6. Override drag and drop blocks
+    document.addEventListener('dragstart', forceEnableDrag, true);
+    
+    // 7. Override print screen blocks
+    document.addEventListener('keyup', forceEnablePrintScreen, true);
+    
+    // 8. Override developer tools blocks
+    window.addEventListener('beforeunload', forceEnableDevTools, true);
+    
+    // 9. Remove oncontextmenu attributes
+    removeContextMenuBlocks();
+    
+    // 10. Override iframe restrictions
+    overrideIframeRestrictions();
+    
+    console.log('✅ Security bypass enabled - All restrictions removed!');
+  }
+
+  function disableSecurityBypass() {
+    if (!securityBypassEnabled) return;
+    
+    console.log('🛡️ Disabling security bypass...');
+    securityBypassEnabled = false;
+    
+    // Remove our override listeners
+    document.removeEventListener('contextmenu', forceEnableContextMenu, true);
+    document.removeEventListener('selectstart', forceEnableSelection, true);
+    document.removeEventListener('mousedown', forceEnableSelection, true);
+    document.removeEventListener('copy', forceEnableCopy, true);
+    document.removeEventListener('paste', forceEnablePaste, true);
+    document.removeEventListener('cut', forceEnableCut, true);
+    document.removeEventListener('keydown', forceEnableKeyboard, true);
+    document.removeEventListener('dragstart', forceEnableDrag, true);
+    document.removeEventListener('keyup', forceEnablePrintScreen, true);
+    window.removeEventListener('beforeunload', forceEnableDevTools, true);
+    
+    console.log('❌ Security bypass disabled');
+  }
+
+  function forceEnableContextMenu(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    // Don't prevent default - allow context menu to show
+    console.log('🛡️ Right-click enabled on:', e.target);
+  }
+
+  function forceEnableSelection(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    // Don't prevent default - allow text selection
+    
+    // Force enable text selection on target element
+    const target = e.target;
+    target.style.userSelect = 'text';
+    target.style.webkitUserSelect = 'text';
+    target.style.mozUserSelect = 'text';
+    target.style.msUserSelect = 'text';
+    
+    console.log('🛡️ Text selection enabled on:', target);
+  }
+
+  function forceEnableCopy(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    console.log('🛡️ Copy operation enabled');
+  }
+
+  function forceEnablePaste(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    console.log('🛡️ Paste operation enabled');
+  }
+
+  function forceEnableCut(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    console.log('🛡️ Cut operation enabled');
+  }
+
+  function forceEnableKeyboard(e) {
+    // Allow important keyboard shortcuts
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'c' || e.key === 'v' || e.key === 'x' || e.key === 'a' || 
+          e.key === 's' || e.key === 'p' || e.key === 'u' || e.key === 'f' ||
+          e.key === 'r' || e.key === 'F12') {
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        console.log('🛡️ Keyboard shortcut enabled:', e.key);
+      }
+    }
+    
+    // Allow F12, F5, etc.
+    if (e.key === 'F12' || e.key === 'F5' || e.key === 'F11') {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      console.log('🛡️ Function key enabled:', e.key);
+    }
+  }
+
+  function forceEnableDrag(e) {
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+    console.log('🛡️ Drag operation enabled');
+  }
+
+  function forceEnablePrintScreen(e) {
+    if (e.key === 'PrintScreen' || e.key === 'F12') {
+      e.stopPropagation();
+      e.stopImmediatePropagation();
+      console.log('🛡️ Print screen / Dev tools enabled');
+    }
+  }
+
+  function forceEnableDevTools(e) {
+    // Override any beforeunload handlers that try to prevent dev tools
+    e.stopPropagation();
+    e.stopImmediatePropagation();
+  }
+
+  function removeSelectionBlockCSS() {
+    // Inject CSS to override selection blocks
+    const bypassCSS = document.createElement('style');
+    bypassCSS.id = 'soal-scanner-bypass-css';
+    bypassCSS.textContent = `
+      * {
+        -webkit-user-select: text !important;
+        -moz-user-select: text !important;
+        -ms-user-select: text !important;
+        user-select: text !important;
+        -webkit-touch-callout: default !important;
+        -webkit-tap-highlight-color: initial !important;
+      }
+      
+      /* Override pointer-events blocks */
+      *[style*="pointer-events: none"] {
+        pointer-events: auto !important;
+      }
+      
+      /* Override visibility blocks */
+      *[style*="visibility: hidden"] {
+        visibility: visible !important;
+      }
+      
+      /* Override display blocks for context menus */
+      .no-right-click,
+      .disable-selection,
+      .no-copy,
+      .protected {
+        pointer-events: auto !important;
+        user-select: text !important;
+      }
+    `;
+    
+    if (!document.getElementById('soal-scanner-bypass-css')) {
+      document.head.appendChild(bypassCSS);
+      console.log('🛡️ Selection block CSS removed');
+    }
+  }
+
+  function removeContextMenuBlocks() {
+    // Remove oncontextmenu="return false" attributes
+    const elementsWithContextBlock = document.querySelectorAll('[oncontextmenu]');
+    elementsWithContextBlock.forEach(element => {
+      element.removeAttribute('oncontextmenu');
+      console.log('🛡️ Removed oncontextmenu block from:', element);
+    });
+    
+    // Remove onselectstart="return false" attributes
+    const elementsWithSelectBlock = document.querySelectorAll('[onselectstart]');
+    elementsWithSelectBlock.forEach(element => {
+      element.removeAttribute('onselectstart');
+      console.log('🛡️ Removed onselectstart block from:', element);
+    });
+    
+    // Remove ondragstart="return false" attributes
+    const elementsWithDragBlock = document.querySelectorAll('[ondragstart]');
+    elementsWithDragBlock.forEach(element => {
+      element.removeAttribute('ondragstart');
+      console.log('🛡️ Removed ondragstart block from:', element);
+    });
+  }
+
+  function overrideIframeRestrictions() {
+    // Override iframe restrictions that might block functionality
+    const iframes = document.querySelectorAll('iframe[sandbox]');
+    iframes.forEach(iframe => {
+      const currentSandbox = iframe.getAttribute('sandbox');
+      if (!currentSandbox.includes('allow-scripts')) {
+        iframe.setAttribute('sandbox', currentSandbox + ' allow-scripts allow-same-origin');
+        console.log('🛡️ Modified iframe sandbox restrictions');
+      }
+    });
+  }
+
+  function checkAndApplyBypass() {
+    // Auto-detect if page has security restrictions
+    const hasRightClickBlock = document.querySelector('[oncontextmenu*="false"]') || 
+                              document.querySelector('[oncontextmenu*="return false"]');
+    const hasSelectionBlock = document.querySelector('[onselectstart*="false"]') ||
+                             document.querySelector('[style*="user-select: none"]');
+    const hasCopyBlock = document.querySelector('[oncopy*="false"]') ||
+                        document.querySelector('[oncut*="false"]');
+    
+    if (hasRightClickBlock || hasSelectionBlock || hasCopyBlock) {
+      console.log('🛡️ Security restrictions detected, applying bypass...');
+      enableSecurityBypass();
+      return true;
+    }
+    
+    return false;
+  }
+
   // Load settings dan shortcuts
-  chrome.storage.sync.get(['floatingMenuEnabled', 'customShortcuts', 'geminiApiKeys'], function(result) {
+  chrome.storage.sync.get(['floatingMenuEnabled', 'customShortcuts', 'geminiApiKeys', 'securityBypassEnabled'], function(result) {
     const menuEnabled = result.floatingMenuEnabled !== false; // Default true
+    const bypassEnabled = result.securityBypassEnabled !== false; // Default true
+    
     if (result.customShortcuts) {
       shortcuts = { ...shortcuts, ...result.customShortcuts };
     }
@@ -73,6 +317,17 @@
     if (menuEnabled) {
       createFloatingMenu();
       updateFloatingMenuStatus();
+    }
+    
+    // Apply security bypass if enabled
+    if (bypassEnabled) {
+      // Check if page needs bypass or apply auto-detection
+      setTimeout(() => {
+        checkAndApplyBypass();
+      }, 1000); // Wait for page to fully load
+      
+      // Also apply immediately if we can detect restrictions
+      enableSecurityBypass();
     }
   });
 
@@ -151,6 +406,16 @@
     if (request.action === 'updateShortcuts') {
       shortcuts = { ...shortcuts, ...request.shortcuts };
       sendResponse({ status: 'shortcuts_updated' });
+      return true;
+    }
+
+    if (request.action === 'toggleSecurityBypass') {
+      if (request.enabled) {
+        enableSecurityBypass();
+      } else {
+        disableSecurityBypass();
+      }
+      sendResponse({ status: 'bypass_toggled', enabled: securityBypassEnabled });
       return true;
     }
   });

@@ -11,6 +11,7 @@
 document.addEventListener('DOMContentLoaded', function() {
   const overlayEnabledToggle = document.getElementById('overlayEnabled');
   const floatingMenuEnabledToggle = document.getElementById('floatingMenuEnabled');
+  const securityBypassEnabledToggle = document.getElementById('securityBypassEnabled');
   const saveShortcutsButton = document.getElementById('saveShortcutsButton');
   const addApiKeyButton = document.getElementById('addApiKeyButton');
   const saveApiKeysButton = document.getElementById('saveApiKeysButton');
@@ -18,6 +19,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const apiKeysContainer = document.getElementById('apiKeysContainer');
   const roundRobinInfo = document.getElementById('roundRobinInfo');
   const statusDiv = document.getElementById('status');
+  const bypassStatusText = document.getElementById('bypassStatusText');
 
   // Shortcut selectors
   const shortcutScanFull = document.getElementById('shortcutScanFull');
@@ -38,6 +40,7 @@ document.addEventListener('DOMContentLoaded', function() {
     'currentKeyIndex', 
     'overlayEnabled', 
     'floatingMenuEnabled',
+    'securityBypassEnabled',
     'customShortcuts',
     // Legacy support
     'geminiApiKey'
@@ -59,6 +62,10 @@ document.addEventListener('DOMContentLoaded', function() {
     
     // Floating menu toggle (default true)
     floatingMenuEnabledToggle.checked = result.floatingMenuEnabled !== false;
+
+    // Security bypass toggle (default true)
+    securityBypassEnabledToggle.checked = result.securityBypassEnabled !== false;
+    updateBypassStatus(result.securityBypassEnabled !== false);
 
     // Custom shortcuts
     const shortcuts = result.customShortcuts || {
@@ -110,6 +117,31 @@ document.addEventListener('DOMContentLoaded', function() {
             if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
               chrome.tabs.sendMessage(tab.id, {
                 action: 'toggleFloatingMenu'
+              }).catch(() => {}); // Ignore errors untuk tabs yang tidak support
+            }
+          });
+        });
+      }
+    });
+  });
+
+  securityBypassEnabledToggle.addEventListener('change', function() {
+    const isEnabled = securityBypassEnabledToggle.checked;
+    
+    chrome.storage.sync.set({ 'securityBypassEnabled': isEnabled }, function() {
+      if (chrome.runtime.lastError) {
+        tampilkanStatus('Gagal menyimpan setting security bypass: ' + chrome.runtime.lastError.message, 'error');
+      } else {
+        tampilkanStatus(`Security bypass ${isEnabled ? 'diaktifkan' : 'dinonaktifkan'}. Reload halaman untuk mengaplikasikan perubahan.`, 'success');
+        updateBypassStatus(isEnabled);
+        
+        // Notify all tabs tentang perubahan setting bypass
+        chrome.tabs.query({}, function(tabs) {
+          tabs.forEach(tab => {
+            if (tab.url && !tab.url.startsWith('chrome://') && !tab.url.startsWith('chrome-extension://')) {
+              chrome.tabs.sendMessage(tab.id, {
+                action: 'toggleSecurityBypass',
+                enabled: isEnabled
               }).catch(() => {}); // Ignore errors untuk tabs yang tidak support
             }
           });
@@ -505,6 +537,16 @@ document.addEventListener('DOMContentLoaded', function() {
           statusDiv.textContent = '';
         }
       }, 5000);
+    }
+  }
+
+  function updateBypassStatus(isEnabled) {
+    if (isEnabled) {
+      bypassStatusText.textContent = 'Aktif - Right-click, text selection, dan keyboard shortcuts diaktifkan';
+      bypassStatusText.style.color = '#28a745';
+    } else {
+      bypassStatusText.textContent = 'Nonaktif - Website restrictions akan dibiarkan aktif';
+      bypassStatusText.style.color = '#dc3545';
     }
   }
 });
