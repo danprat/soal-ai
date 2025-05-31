@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "Soal Scanner AI",
-  "version": "2.1.0",
-  "description": "Chrome Extension untuk scan soal dengan AI Gemini, multi API key support, floating menu, round-robin load balancing, dan context menu untuk teks",
+  "version": "2.2.0",
+  "description": "Chrome Extension untuk scan soal dengan AI Gemini, multi API key support, floating menu, round-robin load balancing, context menu untuk teks, dan bypass keamanan website",
   "author": "Dany Pratmanto",
   "permissions": [
     "activeTab",

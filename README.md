@@ -19,7 +19,14 @@ Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI
 - 📐 **Snipping tool** untuk pilih area soal spesifik
 - 📋 **Copy jawaban** dengan satu klik langsung dari overlay
 
-## 🆕 Fitur Terbaru v2.1
+## 🆕 Fitur Terbaru v2.2
+
+### 🛡️ Security Bypass - BARU!
+- **Override website restrictions** yang blokir right-click, text selection, copy-paste
+- **Auto-detection** website dengan security blocks dan bypass otomatis
+- **Manual toggle** di Settings untuk enable/disable
+- **Perfect untuk:** E-learning sites, protected documents, restricted PDFs
+- **Bypass semua:** Right-click menu, text selection, keyboard shortcuts, developer tools
 
 ### 📝 Context Menu - Jawab Soal dari Teks
 - **Select teks soal** di halaman web apa saja
@@ -36,11 +43,21 @@ Extension Chrome yang bisa scan soal dari screenshot dan dijawab pakai Gemini AI
 5. **Lihat jawaban** - hasil muncul dalam overlay yang sama dengan screenshot mode
 6. **Copy atau tutup** - sama seperti fitur screenshot
 
-### Kelebihan Mode Teks:
+### 🛡️ Security Bypass Features:
+- **Right-click restoration** - Aktifkan context menu yang diblokir website
+- **Text selection** - Bolehkan select dan copy teks di protected pages  
+- **Keyboard shortcuts** - Restore Ctrl+C, Ctrl+V, Ctrl+A, F12, dll
+- **Developer tools** - Unblock F12 dan developer console
+- **Copy/paste operations** - Override copy protection
+- **Auto-detection** - Deteksi otomatis dan apply bypass di restricted sites
+- **Manual control** - Toggle on/off di Settings sesuai kebutuhan
+
+### Kelebihan Mode Teks + Security Bypass:
 - ⚡ **Lebih cepat** - tidak perlu capture dan process gambar
 - 🎯 **Lebih akurat** - AI langsung baca teks tanpa OCR
+- 🛡️ **Bypass restrictions** - Works di protected sites yang blokir copy-paste
 - 📱 **Works di semua platform** - desktop, mobile, tablet
-- 📄 **Support semua format** - PDF, Google Docs, Wikipedia, website, dll
+- 📄 **Support semua format** - PDF, Google Docs, Wikipedia, protected sites
 - 🔄 **Auto round-robin** - pakai multiple API keys secara bergantian
 
 ## 🎯 Mode Penggunaan
